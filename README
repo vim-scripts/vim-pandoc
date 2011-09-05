@@ -1,0 +1,18 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3730
+
+This is a plugin for writing and editing documents in pandoc's extended markdown. Pandoc converts markdown to several formats, including html, latex, context, pdf (via latex), odt, rst, epub, docbook, and org-mode. It's extended markdown supports footnotes, tables, definition lists, superscript and subscript, strikeout, enhanced ordered lists, delimited code blocks, markdown inside HTML blocks, TeX math, and citations. For more information on pandoc, see http://johnmacfarlane.net/pandoc
+
+This plugin provides:
+
+-   some settings to make vim a pleasant pandoc writing environment
+-   syntax highlighting, with support for pandoc's extended markdown
+-   snippets for use with snipMate
+-   section folding
+-   citation completion from bibtex, MODS, RIS and citeproc JSON files
+-   some simple conversion and tidying functions and localleader mappings
+
+For the latest version, visit https://github.com/vim-pandoc/vim-pandoc
+
+Please direct feature suggestions, bug reports, etc., to https://github.com/vim-pandoc/vim-pandoc/issues
+
+The included syntax file is a descendent of Jeremy Schultz's vimscript#2389, which is no longer being maintained.
