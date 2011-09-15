@@ -107,10 +107,9 @@ endif
 """""""""""""""""""""""""""""""""""""""""""""""
 " Definitions:
 "
-syn match pandocDefinitionBlock /^.*\n\(^\s*\n\)*[:~]\(\s\{3,}\|\t\).*\n\(\(^\s\{4,}\|^\t\).*\n\)*/ skipnl contains=pandocDefinitionBlockTerm,pandocLinkArea,pandocEmphasis,pandocStrong,pandocNoFormatted,pandocStrikeout,pandocSubscript,pandocSuperscript
-syn match pandocDefinitionBlockTerm /^.*\n\(^\s*\n\)*[:~]\@=/ contained containedin=pandocDefinitionBlock contains=pandocNoFormatted,pandocEmphasis
-syn match pandocDefinitionBlockMark /^[:~]/ contained containedin=pandocDefinitionBlock
-
+syn match pandocDefinitionBlock /^.*\n\(^\s*\n\)*\s\{0,2}[:~]\(\s\{1,3}\|\t\).*\n\(\(^\s\{4,}\|^\t\).*\n\)*/ skipnl contains=pandocDefinitionBlockTerm,pandocDefinitionBlockMark,pandocLinkArea,pandocEmphasis,pandocStrong,pandocNoFormatted,pandocStrikeout,pandocSubscript,pandocSuperscript,@Spell
+syn match pandocDefinitionBlockTerm /^.*\n\(^\s*\n\)*\(\s*[:~]\)\@=/ contained containedin=pandocDefinitionBlock contains=pandocNoFormatted,pandocEmphasis
+syn match pandocDefinitionBlockMark /^\s*[:~]/ contained containedin=pandocDefinitionBlock
 """"""""""""""""""""""""""""""""""""""""""""""
 " Footnotes:
 "

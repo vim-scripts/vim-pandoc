@@ -2,9 +2,6 @@
 " ftplugin/pandoc.vim
 "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" # Import common functions
-
-execute 'source ' . expand("<sfile>:h") . '/functions.vim'
 
 " # Formatting options
 
@@ -75,8 +72,15 @@ setlocal comments=s:<!--,m:\ \ \ \ ,e:-->
 " # Folding sections with ATX style headers.
 "
 if !exists("g:pandoc_no_folding") || !g:pandoc_no_folding
-	setlocal foldexpr=MarkdownLevel()
+	setlocal foldexpr=pandoc#MarkdownLevel()
 	setlocal foldmethod=expr
+endif
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" # Voom support
+"
+if exists(":Voom")
+	noremap <buffer><silent> <localleader>o :Voom markdown<cr>
 endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -84,32 +88,37 @@ endif
 "
 " This adds citation keys from a file named citationkeys.dict in the pandoc data dir to the dictionary.
 " 
-if eval("g:paths_style") == "posix"
+if has("unix") || has("macunix")
 	setlocal dictionary+=$HOME."/.pandoc/citationkeys.dict"
 else
-	setlocal dictionary+=%APPDATA%."\pandoc\citationkeys.dict"
+	setlocal dictionary+=%APPDATA%."/pandoc/citationkeys.dict"
 endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " # Autocomplete citationkeys using function
 "
-call Pandoc_Find_Bibfile()
-setlocal omnifunc=Pandoc_Complete
+call pandoc#Pandoc_Find_Bibfile()
+
+let s:completion_type = ""
+setlocal omnifunc=pandoc#Pandoc_Complete
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " # Supertab support
 "
-if exists('g:SuperTabCompletionContexts')
-  let b:SuperTabCompletionContexts =
-    \ ['PandocContext'] + g:SuperTabCompletionContexts
-endif
+if exists("g:SuperTabDefaultCompletionType")
+	call SuperTabSetDefaultCompletionType("context")
+
+	if exists('g:SuperTabCompletionContexts')
+		let b:SuperTabCompletionContexts =
+		\ ['pandoc#PandocContext'] + g:SuperTabCompletionContexts
+	endif
 "
 " disable supertab completions after bullets and numbered list
-" items (since one commonly types something like `+<tab>` to 
+" items (since one commonly types something like `+<tab>` to
 " create a list.)
 "
-let b:SuperTabNoCompleteAfter = ['\s', '^\s*\(-\|\*\|+\|>\|:\)', '^\s*(\=\d\+\(\.\=\|)\=\)'] 
-
+let b:SuperTabNoCompleteAfter = ['\s', '^\s*\(-\|\*\|+\|>\|:\)', '^\s*(\=\d\+\(\.\=\|)\=\)']
+endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " # Commands that call Pandoc
 "
@@ -135,15 +144,22 @@ command! -buffer MarkdownTidy %!pandoc -t markdown --no-wrap -s
 " plugin/pandoc.vim
 python<<EOF
 for opener in pandoc_executors:
-	name, mapping, execute, command = opener
-	open_when_done = bool(int(execute)).__repr__()
+	name, mapping, type, command = opener
 	if command not in ("", "None", None):
-		executor = 'py pandoc_execute("' + command + '",' + open_when_done + ')'
+		opening_executor = 'call pandoc_exec#PandocExecute("' + command + '", "' + type + '" , 1)'
+		nonopening_executor = 'call pandoc_exec#PandocExecute("' + command + '", "' + type + '", 0)'
 		if name not in ("", "None", None):
-			vim.command("command! -buffer " + name + " exec '" + executor + "'")
+			vim.command("command! -buffer " + name + " exec '" + nonopening_executor + "'")
+			vim.command("command! -buffer " + name + "Open" + " exec '" + opening_executor + "'")
+			vim.command("menu Pandoc.Executors." + name + "   " + \
+			            " :" + nonopening_executor + "<cr>")
+			vim.command("menu Pandoc.Executors." + name + "Open" + "   " + \
+			            " :" + opening_executor + "<cr>")
 		if mapping not in ("", "None", None):
 			vim.command("map <buffer><silent> " + mapping + \
-						" :" + executor + "<cr>")
+						" :" + nonopening_executor + "<cr>")
+			vim.command("map <buffer><silent> " + mapping + "+" + \
+						" :" + opening_executor + "<cr>")
 EOF
 
 " While I'm at it, here are a few more functions mappings that are useful when
@@ -151,13 +167,13 @@ EOF
 "
 " Open link under cursor in browser
 "
-map <buffer><silent> <LocalLeader>www :py pandoc_open_uri()<cr>
+map <buffer><silent> <LocalLeader>www :call pandoc_misc#Pandoc_Open_URI()<cr>
 
 "" Jump forward to existing reference link (or footnote link)
-map <buffer><silent> <LocalLeader>gr :py pandoc_go_to_ref()<cr>
+map <buffer><silent> <LocalLeader>gr :call pandoc_misc#Pandoc_Goto_Ref()<cr>
 
 "" Jump back to existing reference link (or fn link)
-map <buffer><silent> <LocalLeader>br :py pandoc_go_back_from_ref()<cr>
+map <buffer><silent> <LocalLeader>br :call pandoc_misc#Pandoc_Back_From_Ref()<cr>
 
 "" Add new reference link (or footnote link) after current paragraph. (This
 "" works better than the snipmate snippet for doing this.)
